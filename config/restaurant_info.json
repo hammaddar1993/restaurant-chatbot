@@ -1,0 +1,42 @@
+{
+  "restaurant_name": "DUMx Broast Restaurant",
+  "location": {
+    "address": "Shop 12B, G1 Market Phase1, Block G, Johar Town, Lahore",
+    "short_address": "Johar Town, G1 Market Phase1. Shop 12B",
+    "latitude": 31.474400,
+    "longitude": 74.280300
+  },
+  "contact": {
+    "phone": "0304 1113869",
+    "whatsapp": "0304 1113869"
+  },
+  "timing": {
+    "opening": "12:00 PM",
+    "closing": "3:00 AM",
+    "display": "12 PM - 3 AM daily"
+  },
+  "specialty": "Broast chicken",
+  "services": ["dine-in", "takeaway", "delivery"],
+  "recommendations": {
+    "singles": {
+      "name": "Spicy Singles",
+      "price": 950
+    },
+    "couples": {
+      "name": "Hot Duos",
+      "price": 1450
+    },
+    "families": {
+      "name": "Ultimate Family",
+      "price": 5300
+    },
+    "large_groups": {
+      "name": "BIG FAT PARTY",
+      "price": 10200
+    }
+  },
+  "communication_style": {
+    "tone": "friendly",
+    "style": "waiter-like"
+  }
+}
