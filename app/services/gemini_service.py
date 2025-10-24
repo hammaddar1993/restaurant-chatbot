@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from app.core.config import settings
 import logging
 import json
+import re
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -180,45 +181,39 @@ Be brief, friendly, and efficient like a real waiter."""
         return "\n".join(context_parts) if context_parts else "No additional context"
 
     def extract_action(self, response: str) -> Optional[Dict[str, Any]]:
-        """Extract action JSON from response"""
+        """Extract action JSON from response using regex"""
         try:
-            if "```action" in response:
-                start = response.find("```action") + 9
-                end = response.find("```", start)
-                if end == -1:  # Safety check - if closing ``` not found
-                    logger.warning("Action block not properly closed")
+            # Match ```action { ... } ``` or ```json { ... } ```
+            pattern = r"```(?:action|json)\s*(\{[\s\S]*?\})\s*```"
+            match = re.search(pattern, response)
+            if match:
+                action_str = match.group(1).strip()
+                try:
+                    return json.loads(action_str)
+                except json.JSONDecodeError as e:
+                    logger.error(f"❌ JSON decode error in action block: {e}")
+                    logger.debug(f"Raw action text: {action_str[:300]}")
                     return None
-                action_json = response[start:end].strip()
-                return json.loads(action_json)
             return None
         except Exception as e:
             logger.error(f"Error extracting action: {e}")
             return None
 
     def get_clean_response(self, response: str) -> str:
-        """Remove action JSON from response to get clean text"""
-        if "```action" in response:
-            # Find start of action block
-            start = response.find("```action")
-            # Find end of action block (closing ```)
-            temp_end = response.find("```", start + 9)
-            if temp_end != -1:
-                end = response.find("```", temp_end + 3)
-                if end != -1:
-                    # Remove the entire action block
-                    clean = (response[:start] + response[end + 3:]).strip()
-                    if not clean or len(clean) < 5:
-                        logger.warning(f"⚠️ Response became empty after removing action block")
-                        logger.warning(f"Original response: {response[:200]}")
-                        return response[:start].strip() if start > 0 else "I'll help you with that. How can I assist?"
-                    return clean
+        """Remove any ```action or ```json blocks and return user-friendly text"""
+        try:
+            # Remove all action/json code blocks
+            clean = re.sub(r"```(?:action|json)[\s\S]*?```", "", response).strip()
 
-        # No action block found, return as-is
-        if not response or len(response.strip()) < 5:
-            logger.warning(f"⚠️ Empty response from AI")
+            if not clean or len(clean) < 5:
+                logger.warning("⚠️ Empty response after removing action block")
+                logger.debug(f"Original response: {response[:300]}")
+                return "I'll help you with that. How can I assist?"
+
+            return clean
+        except Exception as e:
+            logger.error(f"Error cleaning response: {e}")
             return "I'll help you with that. How can I assist?"
-
-        return response
 
 
 # Singleton instance
